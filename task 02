@@ -1,0 +1,44 @@
+from PIL import Image
+import random
+
+def encrypt_image(input_path, output_path, key=123, swap=True):
+    img = Image.open(input_path)
+    pixels = list(img.getdata())
+
+    encrypted_pixels = [tuple((channel ^ key) & 0xFF for channel in pixel) for pixel in pixels]
+
+    if swap:
+        rand = random.Random(key)
+        indices = list(range(len(encrypted_pixels)))
+        rand.shuffle(indices)
+        encrypted_pixels = [encrypted_pixels[i] for i in indices]
+
+    encrypted_img = Image.new(img.mode, img.size)
+    encrypted_img.putdata(encrypted_pixels)
+    encrypted_img.save(output_path)
+    print(f"Image encrypted and saved as {output_path}")
+
+def decrypt_image(input_path, output_path, key=123, swap=True):
+    img = Image.open(input_path)
+    pixels = list(img.getdata())
+
+    if swap:
+        rand = random.Random(key)
+        indices = list(range(len(pixels)))
+        rand.shuffle(indices)
+        restored = [None] * len(pixels)
+        for i, j in enumerate(indices):
+            restored[j] = pixels[i]
+        pixels = restored
+
+    decrypted_pixels = [tuple((channel ^ key) & 0xFF for channel in pixel) for pixel in pixels]
+
+    decrypted_img = Image.new(img.mode, img.size)
+    decrypted_img.putdata(decrypted_pixels)
+    decrypted_img.save(output_path)
+    print(f"Image decrypted and saved as {output_path}")
+
+
+# Run example
+encrypt_image("original.png", "encrypted.png", key=123, swap=True)
+decrypt_image("encrypted.png", "decrypted.png", key=123, swap=True)
